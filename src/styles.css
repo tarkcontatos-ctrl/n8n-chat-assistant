@@ -4,141 +4,118 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
-
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* Vigyon tokens */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --radius: 6px;
+  --bg: #e9ece8;
+  --surface: #f6f7f4;
+  --ink: #182226;
+  --muted: #566360;
+  --line: #c7cec8;
+  --brand: #0e6b4e;
+  --on-brand: #ffffff;
+  --bot: #dde4df;
+  --alert: #f2b705;
+  --err: #b3261e;
+  --idle: #8a948f;
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: var(--on-brand);
+  --muted-foreground: var(--muted);
+  --border: var(--line);
 }
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171a; --surface: #182024; --ink: #e7ece8; --muted: #98a5a1; --line: #2b3639;
+    --brand: #3dbb90; --on-brand: #0b1a14; --bot: #1f2a2e; --err: #ff8a80; --idle: #6b7773;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171a; --surface: #182024; --ink: #e7ece8; --muted: #98a5a1; --line: #2b3639;
+  --brand: #3dbb90; --on-brand: #0b1a14; --bot: #1f2a2e; --err: #ff8a80; --idle: #6b7773;
 }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
-
+  * { border-color: var(--line); }
+  html { scroll-behavior: smooth; }
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background: var(--bg); color: var(--ink);
+    font-family: var(--font-sans); font-size: 16px; line-height: 1.55;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
+  :focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 }
+
+.vg-wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.vg-display { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; letter-spacing: -0.01em; }
+.vg-h1 { font-size: clamp(2.5rem, 5.4vw, 4.4rem); line-height: 1; }
+.vg-h2 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); line-height: 1.05; }
+.vg-muted { color: var(--muted); }
+
+.vg-header { position: sticky; top: 0; z-index: 20; height: 64px; background: var(--bg); border-bottom: 1px solid var(--line); }
+.vg-nav a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.vg-nav a:hover { color: var(--brand); }
+@media (max-width: 759px) { .vg-nav { display: none; } }
+
+.vg-btn { min-height: 44px; padding: 0 18px; border-radius: 6px; font-weight: 600; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.vg-btn-primary { background: var(--brand); color: var(--on-brand); }
+.vg-btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+.vg-btn-outline { background: transparent; color: var(--ink); border-color: var(--ink); }
+.vg-btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); min-height: 36px; padding: 0 12px; font-size: 14px; }
+.vg-btn-sm { min-height: 32px; padding: 0 10px; font-size: 13px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--ink); cursor: pointer; }
+
+.vg-hero { display: grid; gap: 40px; grid-template-columns: 1fr; padding: 48px 0; }
+@media (min-width: 960px) { .vg-hero { grid-template-columns: 5fr 7fr; align-items: start; } }
+
+.vg-rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.vg-rows > div:last-child { border-bottom: 1px solid var(--line); }
+
+.vg-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; height: clamp(520px, 78vh, 680px); display: flex; flex-direction: column; overflow: hidden; }
+.vg-panel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.vg-panel-head select, .vg-input { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; }
+.vg-panel-head input[type="checkbox"] { accent-color: var(--brand); width: 18px; height: 18px; }
+.vg-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.vg-msg { max-width: 88%; padding: 10px 14px; border-radius: 10px; }
+.vg-msg p + p, .vg-msg ul + p, .vg-msg p + ul { margin-top: 6px; }
+.vg-msg ul { list-style: disc; padding-left: 20px; }
+.vg-user { align-self: flex-end; background: var(--brand); color: var(--on-brand); border-bottom-right-radius: 2px; }
+.vg-bot { align-self: flex-start; background: var(--bot); color: var(--ink); border-bottom-left-radius: 2px; }
+.vg-composer { display: flex; gap: 10px; align-items: flex-end; padding: 12px 14px; border-top: 1px solid var(--line); }
+.vg-composer textarea { flex: 1; resize: none; padding: 10px 12px; min-height: 52px; font: inherit; }
+.vg-mic { width: 52px; height: 52px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); position: relative; cursor: pointer; display: grid; place-items: center; flex-shrink: 0; }
+.vg-mic[aria-pressed="true"] { background: var(--alert); color: #182226; border-color: var(--alert); }
+.vg-mic[aria-pressed="true"]::after { content: ""; position: absolute; inset: -1px; border-radius: 999px; border: 2px solid var(--alert); animation: vg-pulse 1.4s ease-out infinite; }
+@keyframes vg-pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(1.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .vg-mic[aria-pressed="true"]::after { animation: none; } html { scroll-behavior: auto; } }
+.vg-status { display: flex; align-items: center; gap: 8px; padding: 0 14px 12px; font-size: 13px; color: var(--muted); }
+.vg-dot { width: 9px; height: 9px; flex-shrink: 0; }
+.vg-dot[data-s="ready"] { background: var(--brand); }
+.vg-dot[data-s="listening"] { background: var(--alert); }
+.vg-dot[data-s="busy"] { background: var(--idle); }
+.vg-dot[data-s="error"] { background: var(--err); }
+
+.vg-topics { display: grid; grid-template-columns: 1fr; column-gap: 32px; }
+@media (min-width: 760px) { .vg-topics { grid-template-columns: 1fr 1fr; } }
+.vg-topic { width: 100%; min-height: 56px; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.vg-topic:hover { color: var(--brand); }
+.vg-tag { font-size: 13px; font-weight: 500; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+
+.vg-steps { display: grid; gap: 32px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .vg-steps { grid-template-columns: repeat(3, 1fr); } }
+.vg-step-n { font-size: 4rem; line-height: 1; color: var(--brand); }
+
+.vg-dialog { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 24px; width: min(420px, 92vw); margin: auto; }
+.vg-dialog::backdrop { background: rgb(0 0 0 / .5); }
