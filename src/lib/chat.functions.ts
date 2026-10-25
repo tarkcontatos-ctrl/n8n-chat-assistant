@@ -12,7 +12,7 @@ function extractAnswer(data: unknown): string {
     for (const k of ["output", "answer", "text", "response", "message"]) {
       if (typeof o[k] === "string") return o[k] as string;
     }
-    if (o.json) return extractAnswer(o.json);
+    if (o["json"]) return extractAnswer(o["json"]);
   }
   return "";
 }
