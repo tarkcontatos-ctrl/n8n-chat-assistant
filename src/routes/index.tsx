@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowUpRight, ArrowUp, Mic, Volume2, Copy, Plus, ShieldCheck, Activity, AudioLines, Square } from "lucide-react";
+import innovationImage from "@/assets/vigyon-innovation.jpg";
+import { streamSpeech } from "@/lib/stream-speech";
+import { chunkText } from "@/lib/chunk-text";
 import { askVigyon } from "@/lib/chat.functions";
 
 export const Route = createFileRoute("/")({
@@ -50,7 +55,7 @@ function Logo() {
         <circle cx="14" cy="5" r="2.5" fill="var(--alert)" />
       </svg>
       <span className="vg-display text-2xl leading-none">
-        VIGYON <span style={{ fontWeight: 300 }} className="vg-muted">AI</span>
+        VIGYON <span className="vg-brand">AI</span>
       </span>
     </a>
   );
@@ -92,6 +97,7 @@ function Index() {
   const [email, setEmail] = useState("");
   const [loginMsg, setLoginMsg] = useState("");
 
+  const audioController = useRef<AbortController | null>(null);
   const session = useRef<string>("");
   const busyRef = useRef(false);
   const idRef = useRef(1);
@@ -106,22 +112,27 @@ function Index() {
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [msgs, busy]);
 
   function stopAudio() {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    audioController.current?.abort();
+    audioController.current = null;
     setSpeaking(false);
   }
 
-  // speak: browser speechSynthesis in pt-BR
-  function speak(text: string) {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  async function speak(text: string) {
     stopAudio();
-    const u = new SpeechSynthesisUtterance(text.replace(/^[-*•]\s+/gm, "").replace(/\*\*/g, ""));
-    u.lang = "pt-BR";
-    u.rate = opts.current.rate;
-    const v = window.speechSynthesis.getVoices().find((x) => x.lang?.toLowerCase().replace("_", "-") === "pt-br");
-    if (v) u.voice = v;
-    u.onend = u.onerror = () => setSpeaking(false);
+    const controller = new AbortController();
+    audioController.current = controller;
     setSpeaking(true);
-    window.speechSynthesis.speak(u);
+    try {
+      const cleaned = text.replace(/^[-*•]\s+/gm, "").replace(/\*\*/g, "");
+      for (const chunk of chunkText(cleaned)) {
+        controller.signal.throwIfAborted();
+        await streamSpeech('/api/speech', chunk, controller.signal, opts.current.rate);
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) setStatus({ s: "error", text: error instanceof Error ? error.message : "Não foi possível reproduzir a voz." });
+    } finally {
+      if (audioController.current === controller) { audioController.current = null; setSpeaking(false); }
+    }
   }
 
   async function send(raw: string) {
@@ -215,43 +226,43 @@ function Index() {
             <nav className="vg-nav flex gap-6" aria-label="Principal">
               <a href="#assistente">Assistente</a>
               <a href="#temas">Temas</a>
-              <a href="#como-funciona">Como funciona</a>
+
             </nav>
-            <button className="vg-btn vg-btn-outline" onClick={() => { setLoginMsg(""); dialogRef.current?.showModal(); }}>Entrar</button>
+            <Button className="vg-btn vg-btn-outline" onClick={() => { setLoginMsg(""); dialogRef.current?.showModal(); }}>Entrar</Button>
           </div>
         </div>
       </header>
 
       <main>
-        <section className="vg-wrap vg-hero">
-          <div className="flex flex-col gap-6 pt-2">
-            <h1 className="vg-display vg-h1">Segurança do trabalho respondida na hora, por voz ou texto.</h1>
-            <p className="vg-muted" style={{ maxWidth: "46ch" }}>
-              Responde por escrito e em áudio, separa exigência legal de boa prática e avisa quando algo deve ser confirmado na fonte oficial.
-            </p>
+        <section className="vg-hero">
+          <img className="vg-hero-image" src={innovationImage} width={1536} height={1024} alt="Mão robótica com escudo de proteção verde" />
+          <div className="vg-wrap vg-hero-content">
+            <div className="vg-eyebrow"><span className="vg-dot" data-s="ready" /> INTELIGÊNCIA APLICADA À PROTEÇÃO</div>
+            <h1 className="vg-display vg-h1">VIGYON<span className="vg-brand"> AI</span></h1>
+            <h2 className="vg-hero-statement">Antecipe o risco.<br />Avance com inteligência.</h2>
+            <p className="vg-muted vg-hero-description">Segurança do trabalho, meio ambiente e gestão de riscos. Uma nova perspectiva para cada decisão.</p>
             <div className="flex flex-wrap gap-3">
-              <button className="vg-btn vg-btn-primary" onClick={() => { goChat(); toggleMic(); }}>Falar agora</button>
-              <a className="vg-btn vg-btn-outline" href="#temas">Ver temas</a>
+              <Button className="vg-btn vg-btn-primary" onClick={goChat}>Iniciar conversa <ArrowUpRight /></Button>
+              <Button variant="outline" className="vg-btn vg-btn-outline" onClick={() => { goChat(); toggleMic(); }}><Mic /> Falar com Vigyon</Button>
             </div>
-            <div className="vg-rows">
-              <div><span className="font-semibold">Análise de risco</span><span className="vg-muted">por tarefa</span></div>
-              <div><span className="font-semibold">Normas Regulamentadoras</span><span className="vg-muted">NR-1, 6, 12, 33, 35</span></div>
-              <div><span className="font-semibold">Meio ambiente</span><span className="vg-muted">resíduos e licenças</span></div>
-            </div>
+            <div className="vg-hero-meta"><span><ShieldCheck size={16} /> SST / QSMS</span><span><Activity size={16} /> INTELIGÊNCIA ARTIFICIAL</span></div>
           </div>
-
+        </section>
+        <div className="vg-ticker"><div className="vg-wrap">PREVENÇÃO <span>+</span> INTELIGÊNCIA <span>+</span> EVOLUÇÃO <span>+</span> SEGURANÇA</div></div>
+        <section className="vg-wrap vg-workspace">
+          <div className="vg-section-heading"><div><p className="vg-eyebrow">01 / ASSISTENTE</p><h2 className="vg-display vg-h2">Sua próxima decisão<br /><span className="vg-muted">começa aqui.</span></h2></div><span className="vg-online"><span className="vg-dot" data-s="ready" /> Vigyon conectado</span></div>
           <section id="assistente" className="vg-panel" aria-label="Conversa com o Vigyon" style={{ scrollMarginTop: 80 }}>
             <div className="vg-panel-head">
-              <strong className="mr-auto">Conversa</strong>
+              <strong className="mr-auto flex items-center gap-2"><AudioLines size={20} /> VIGYON <span className="vg-muted">/ Conversa</span></strong>
               <label className="flex items-center gap-2"><input type="checkbox" checked={voiceReply} onChange={(e) => setVoiceReply(e.target.checked)} />Responder em voz</label>
               <label className="flex items-center gap-2"><input type="checkbox" checked={autoSend} onChange={(e) => setAutoSend(e.target.checked)} />Enviar ao parar de falar</label>
-              <label className="flex items-center gap-2">Voz
+              <label className="flex items-center gap-2">Velocidade
                 <select value={rate} onChange={(e) => setRate(Number(e.target.value))} className="h-9 px-2">
                   <option value={0.9}>lenta</option><option value={1}>normal</option><option value={1.2}>rápida</option>
                 </select>
               </label>
-              {speaking && <button className="vg-btn vg-btn-ghost" onClick={stopAudio}>Parar áudio</button>}
-              <button className="vg-btn vg-btn-ghost" onClick={newChat}>Nova conversa</button>
+              {speaking && <Button className="vg-btn vg-btn-ghost" onClick={stopAudio}><Square /> Parar áudio</Button>}
+              <Button className="vg-btn vg-btn-ghost" onClick={newChat}><Plus /> Nova conversa</Button>
             </div>
 
             <div className="vg-log" ref={logRef} role="log" aria-live="polite" aria-label="Mensagens">
@@ -262,8 +273,8 @@ function Index() {
                   <div key={m.id} className="vg-msg vg-bot">
                     <BotText text={m.text} />
                     <div className="mt-2 flex gap-2">
-                      <button className="vg-btn-sm" onClick={() => speak(m.text)}>Ouvir resposta</button>
-                      <button className="vg-btn-sm" onClick={() => copy(m)}>{copied === m.id ? "Copiado" : "Copiar"}</button>
+                      <Button className="vg-btn-sm" onClick={() => speak(m.text)} title="Ouvir resposta" aria-label="Ouvir resposta"><Volume2 /></Button>
+                      <Button className="vg-btn-sm" onClick={() => copy(m)} title={copied === m.id ? "Copiado" : "Copiar"} aria-label={copied === m.id ? "Copiado" : "Copiar"}><Copy /></Button>
                     </div>
                   </div>
                 ),
@@ -276,42 +287,28 @@ function Index() {
               <textarea id="q" rows={2} maxLength={1500} className="vg-input" placeholder="Digite ou fale sua pergunta…"
                 value={input} onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }} />
-              <button type="button" className="vg-mic" aria-pressed={listening} aria-label={listening ? "Parar de ouvir" : "Falar pelo microfone"} onClick={toggleMic}>
+              <Button type="button" className="vg-mic" aria-pressed={listening} aria-label={listening ? "Parar de ouvir" : "Falar pelo microfone"} onClick={toggleMic}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
                 </svg>
-              </button>
-              <button type="submit" className="vg-btn vg-btn-primary" style={{ minHeight: 52 }} disabled={busy || !input.trim()}>Enviar</button>
+              </Button>
+              <Button type="submit" className="vg-btn vg-btn-primary" style={{ minHeight: 52 }} disabled={busy || !input.trim()} aria-label="Enviar"><ArrowUp /></Button>
             </form>
             <div className="vg-status" aria-live="polite"><span className="vg-dot" data-s={status.s} />{status.text}</div>
           </section>
         </section>
 
         <section id="temas" className="vg-wrap py-16" style={{ scrollMarginTop: 64 }}>
-          <h2 className="vg-display vg-h2 mb-6">Comece por um tema</h2>
+          <p className="vg-eyebrow mb-3">02 / ÁREAS DE ATUAÇÃO</p><h2 className="vg-display vg-h2 mb-6">Explore. Questione. Previna.</h2>
           <div className="vg-topics">
             {TOPICS.map(([title, tag, q]) => (
-              <button key={title} className="vg-topic" onClick={() => { goChat(); send(q); }}>
-                <span>{title}</span><span className="vg-tag">{tag}</span>
-              </button>
+              <Button key={title} className="vg-topic" onClick={() => { goChat(); send(q); }}>
+                <span>{title}</span><span className="flex items-center gap-3"><span className="vg-tag">{tag}</span><ArrowUpRight size={18} /></span>
+              </Button>
             ))}
           </div>
         </section>
 
-        <section id="como-funciona" className="vg-wrap py-16" style={{ scrollMarginTop: 64 }}>
-          <h2 className="vg-display vg-h2 mb-8">Como funciona</h2>
-          <div className="vg-steps">
-            {[["1", "Fale ou digite", "Toque no microfone ou escreva sua pergunta sobre a tarefa."],
-              ["2", "Leia a resposta", "Passos práticos, com a norma citada quando for exigência legal."],
-              ["3", "Ouça se preferir", "A resposta é lida em voz alta, na velocidade que você escolher."]].map(([n, t, d]) => (
-              <div key={n} className="border-t pt-4">
-                <div className="vg-display vg-step-n">{n}</div>
-                <h3 className="mt-2 text-lg font-semibold">{t}</h3>
-                <p className="vg-muted mt-1">{d}</p>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
 
       <footer className="border-t">
@@ -333,8 +330,8 @@ function Index() {
           </label>
           {loginMsg && <p className="text-sm vg-muted" role="status">{loginMsg}</p>}
           <div className="flex flex-wrap gap-3">
-            <button type="submit" className="vg-btn vg-btn-primary">Receber link de acesso</button>
-            <button type="button" className="vg-btn vg-btn-outline" onClick={() => dialogRef.current?.close()}>Fechar</button>
+            <Button type="submit" className="vg-btn vg-btn-primary">Receber link de acesso</Button>
+            <Button type="button" className="vg-btn vg-btn-outline" onClick={() => dialogRef.current?.close()}>Fechar</Button>
           </div>
         </form>
       </dialog>
