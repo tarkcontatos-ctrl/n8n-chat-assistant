@@ -6,6 +6,9 @@ import innovationImage from "@/assets/vigyon-innovation.jpg";
 import { streamSpeech } from "@/lib/stream-speech";
 import { chunkText } from "@/lib/chunk-text";
 import { askVigyon } from "@/lib/chat.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { ChatMarkdown } from "@/components/chat-markdown";
+import { CHAT_ERROR, CHAT_LONG_WAIT, CHAT_MAX_CHARACTERS, CHAT_TIMEOUT_MS, CHAT_WAIT_NOTICE_MS, getChatSession } from "@/lib/chat-config";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,12 +43,6 @@ const TOPICS = [
 
 const READY = "Pronto. Respostas pelo assistente Vigyon.";
 
-function newSession() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : String(Date.now()) + Math.random().toString(36).slice(2);
-}
-
 function Logo() {
   return (
     <a href="#top" className="flex items-center gap-2" aria-label="Vigyon AI">
@@ -61,29 +58,8 @@ function Logo() {
   );
 }
 
-function BotText({ text }: { text: string }) {
-  const blocks: Array<{ type: "p"; t: string } | { type: "ul"; items: string[] }> = [];
-  for (const line of text.split("\n").map((l) => l.trim()).filter(Boolean)) {
-    const li = /^[-*•]\s+/.test(line);
-    const clean = line.replace(/^[-*•]\s+/, "").replace(/\*\*/g, "");
-    if (li) {
-      const last = blocks[blocks.length - 1];
-      if (last && last.type === "ul") last.items.push(clean);
-      else blocks.push({ type: "ul", items: [clean] });
-    } else blocks.push({ type: "p", t: clean });
-  }
-  return (
-    <>
-      {blocks.map((b, i) =>
-        b.type === "p" ? <p key={i}>{b.t}</p> : (
-          <ul key={i}>{b.items.map((it, j) => <li key={j}>{it}</li>)}</ul>
-        ),
-      )}
-    </>
-  );
-}
-
 function Index() {
+  const ask = useServerFn(askVigyon);
   const [msgs, setMsgs] = useState<Msg[]>([{ id: 0, role: "bot", text: WELCOME }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -108,7 +84,11 @@ function Index() {
   const opts = useRef({ voiceReply, autoSend, rate });
   opts.current = { voiceReply, autoSend, rate };
 
-  useEffect(() => { session.current = newSession(); }, []);
+  function loadSession(reset = false) {
+    try { session.current = getChatSession(localStorage, reset); }
+    catch { session.current = crypto.randomUUID(); }
+  }
+  useEffect(() => { loadSession(); }, []);
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [msgs, busy]);
 
   function stopAudio() {
@@ -123,7 +103,7 @@ function Index() {
     audioController.current = controller;
     setSpeaking(true);
     try {
-      const cleaned = text.replace(/^[-*•]\s+/gm, "").replace(/\*\*/g, "");
+      const cleaned = text.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/https?:\/\/\S+/g, "").replace(/^[-*•#]\s+/gm, "").replace(/\*\*/g, "");
       for (const chunk of chunkText(cleaned)) {
         controller.signal.throwIfAborted();
         await streamSpeech('/api/speech', chunk, controller.signal, opts.current.rate);
@@ -136,29 +116,43 @@ function Index() {
   }
 
   async function send(raw: string) {
-    const message = raw.trim().slice(0, 1500);
+    if (raw.length > CHAT_MAX_CHARACTERS) {
+      setStatus({ s: "error", text: "Sua mensagem ultrapassa 8000 caracteres. Reduza o texto antes de enviar." });
+      return;
+    }
+    const message = raw.trim();
     if (!message || busyRef.current) return;
+    if (!session.current) loadSession();
     stopAudio();
     busyRef.current = true;
     setBusy(true);
     setInput("");
     setMsgs((m) => [...m, { id: idRef.current++, role: "user", text: message }]);
-    setStatus({ s: "busy", text: "Processando a pergunta…" });
+    setStatus({ s: "busy", text: "digitando..." });
+    const waitNotice = window.setTimeout(() => setStatus({ s: "busy", text: CHAT_LONG_WAIT }), CHAT_WAIT_NOTICE_MS);
+    const controller = new AbortController();
+    const deadline = window.setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
     try {
-      const { answer } = await askVigyon({ data: { message, sessionId: session.current } });
+      const result = await ask({ data: { message, sessionId: session.current }, signal: controller.signal });
+      if (result.error || typeof result.answer !== "string") throw new Error(CHAT_ERROR);
+      const answer = result.answer;
       setMsgs((m) => [...m, { id: idRef.current++, role: "bot", text: answer }]);
       setStatus({ s: "ready", text: READY });
       if (opts.current.voiceReply) speak(answer);
     } catch (e) {
       console.error(e);
-      setStatus({ s: "error", text: "Não foi possível obter a resposta agora. Tente de novo em instantes." });
+      setInput(message);
+      setStatus({ s: "error", text: CHAT_ERROR });
     } finally {
+      window.clearTimeout(waitNotice);
+      window.clearTimeout(deadline);
       busyRef.current = false;
       setBusy(false);
     }
   }
 
   function toggleMic() {
+    if (busyRef.current) return;
     if (listening) { recRef.current?.stop(); return; }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
@@ -205,9 +199,10 @@ function Index() {
   function goChat() { document.getElementById("assistente")?.scrollIntoView({ block: "start" }); }
 
   function newChat() {
+    if (busyRef.current) return;
     stopAudio();
     recRef.current?.abort?.();
-    session.current = newSession();
+    loadSession(true);
     setMsgs([{ id: idRef.current++, role: "bot", text: WELCOME }]);
     setInput("");
     setStatus({ s: "ready", text: READY });
@@ -262,7 +257,7 @@ function Index() {
                 </select>
               </label>
               {speaking && <Button className="vg-btn vg-btn-ghost" onClick={stopAudio}><Square /> Parar áudio</Button>}
-              <Button className="vg-btn vg-btn-ghost" onClick={newChat}><Plus /> Nova conversa</Button>
+               <Button className="vg-btn vg-btn-ghost" disabled={busy} onClick={newChat}><Plus /> Nova conversa</Button>
             </div>
 
             <div className="vg-log" ref={logRef} role="log" aria-live="polite" aria-label="Mensagens">
@@ -271,7 +266,7 @@ function Index() {
                   <div key={m.id} className="vg-msg vg-user">{m.text}</div>
                 ) : (
                   <div key={m.id} className="vg-msg vg-bot">
-                    <BotText text={m.text} />
+                     <ChatMarkdown text={m.text} />
                     <div className="mt-2 flex gap-2">
                       <Button className="vg-btn-sm" onClick={() => speak(m.text)} title="Ouvir resposta" aria-label="Ouvir resposta"><Volume2 /></Button>
                       <Button className="vg-btn-sm" onClick={() => copy(m)} title={copied === m.id ? "Copiado" : "Copiar"} aria-label={copied === m.id ? "Copiado" : "Copiar"}><Copy /></Button>
@@ -279,15 +274,15 @@ function Index() {
                   </div>
                 ),
               )}
-              {busy && <div className="vg-msg vg-bot vg-muted">Vigyon está pensando…</div>}
+               {busy && <div className="vg-msg vg-bot vg-muted">{status.text}</div>}
             </div>
 
             <form className="vg-composer" onSubmit={(e) => { e.preventDefault(); send(input); }}>
               <label htmlFor="q" className="sr-only">Sua pergunta</label>
-              <textarea id="q" rows={2} maxLength={1500} className="vg-input" placeholder="Digite ou fale sua pergunta…"
+               <textarea id="q" rows={2} disabled={busy} aria-invalid={input.length > CHAT_MAX_CHARACTERS} className="vg-input" placeholder="Digite ou fale sua pergunta…"
                 value={input} onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }} />
-              <Button type="button" className="vg-mic" aria-pressed={listening} aria-label={listening ? "Parar de ouvir" : "Falar pelo microfone"} onClick={toggleMic}>
+               <Button type="button" className="vg-mic" disabled={busy} aria-pressed={listening} aria-label={listening ? "Parar de ouvir" : "Falar pelo microfone"} onClick={toggleMic}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
                 </svg>
@@ -302,7 +297,7 @@ function Index() {
           <p className="vg-eyebrow mb-3">02 / ÁREAS DE ATUAÇÃO</p><h2 className="vg-display vg-h2 mb-6">Explore. Questione. Previna.</h2>
           <div className="vg-topics">
             {TOPICS.map(([title, tag, q]) => (
-              <Button key={title} className="vg-topic" onClick={() => { goChat(); send(q); }}>
+               <Button key={title} className="vg-topic" disabled={busy} onClick={() => { goChat(); send(q); }}>
                 <span>{title}</span><span className="flex items-center gap-3"><span className="vg-tag">{tag}</span><ArrowUpRight size={18} /></span>
               </Button>
             ))}

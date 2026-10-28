@@ -13,3 +13,4 @@
 - Keep chat answers routed through the existing n8n production webhook; presentation and speech changes must not replace its answer source.
 - Generate speech through the TanStack streaming speech route and play PCM chunks sequentially in the browser; this preserves natural delivery and interruptible playback.
 - Keep visual roles in the global CSS semantic tokens so the industrial design stays consistent across controls.
+- Keep chat endpoint configuration and contract validation in a browser-safe module, outbound requests in a server-only helper, and Markdown rendering in a dedicated component; this makes endpoint changes independent of presentation and excludes request implementation from browser bundles.
