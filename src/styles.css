@@ -83,6 +83,21 @@
 .vg-msg { max-width: 82%; padding: 14px 18px; border-radius: 6px; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
 .vg-msg p + p, .vg-msg ul + p, .vg-msg p + ul { margin-top: 8px; }
 .vg-msg ul { list-style: disc; padding-left: 20px; }
+.vg-msg { flex-shrink: 0; min-width: 0; }
+.vg-msg ol { list-style: decimal; padding-left: 20px; }
+.vg-msg h1, .vg-msg h2, .vg-msg h3, .vg-msg h4, .vg-msg h5, .vg-msg h6 { font-weight: 700; line-height: 1.4; margin: 12px 0 8px; }
+.vg-msg h1 { font-size: 22px; }
+.vg-msg h2 { font-size: 20px; }
+.vg-msg h3 { font-size: 18px; }
+.vg-msg a:not(.vg-download) { color: var(--brand); text-decoration: underline; }
+.vg-download { max-width: 100%; margin: 8px 0; white-space: normal; height: auto; text-decoration: none; }
+.vg-table-scroll { max-width: 100%; overflow-x: auto; margin: 10px 0; }
+.vg-msg table { border-collapse: collapse; font-size: 13px; }
+.vg-msg th, .vg-msg td { border: 1px solid var(--line); padding: 8px 10px; min-width: 100px; text-align: left; }
+.vg-msg th { background: var(--surface); }
+.vg-msg pre { max-width: 100%; overflow-x: auto; background: var(--bg); padding: 10px; }
+.vg-msg blockquote { border-left: 2px solid var(--brand); padding-left: 12px; color: var(--muted); }
+.vg-msg > * + * { margin-top: 8px; }
 .vg-user { align-self: flex-end; background: var(--brand); color: var(--on-brand); border-bottom-right-radius: 0; }
 .vg-bot { align-self: flex-start; background: var(--bot); color: var(--ink); border-bottom-left-radius: 0; }
 .vg-composer { display: flex; gap: 10px; align-items: center; padding: 14px 18px 10px; border-top: 1px solid var(--line); }
