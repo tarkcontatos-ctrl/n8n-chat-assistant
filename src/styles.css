@@ -92,7 +92,7 @@
 .vg-msg a:not(.vg-download) { color: var(--brand); text-decoration: underline; }
 .vg-download { max-width: 100%; margin: 8px 0; white-space: normal; height: auto; text-decoration: none; }
 .vg-table-scroll { max-width: 100%; overflow-x: auto; margin: 10px 0; }
-.vg-msg { min-width: 0; max-width: 100%; }
+.vg-msg a.vg-img-link { text-decoration: none; }
 .vg-img-link { display: inline-block; max-width: 100%; margin: 8px 0; cursor: zoom-in; }
 .vg-chat-img { display: block; max-width: 100%; height: auto; border-radius: 10px; }
 .vg-msg table { border-collapse: collapse; font-size: 13px; }
