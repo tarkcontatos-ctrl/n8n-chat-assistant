@@ -58,3 +58,34 @@ describe("Persistent chat session", () => {
     expect(next).not.toBe(sessionId);
   });
 });
+
+describe("Generated file links", () => {
+  const id = "file_01BnwPRWqjXZCaG4xc3CanNn";
+  const download = `${DOWNLOAD_URL}?id=${id}&download=1`;
+  const preview = `${DOWNLOAD_URL}?id=${id}`;
+
+  it("keeps only preview and direct download and removes the link from the text", () => {
+    const out = extractFileLinks(`Criei a planilha.\n\n[📎 Baixar controle_epi.xlsx](${download})`);
+    expect(out.files).toEqual([{ id, name: "controle_epi.xlsx", previewUrl: preview, downloadUrl: download }]);
+    expect(out.text).toBe("Criei a planilha.");
+  });
+  it("lists one file once even when the answer repeats its link", () => {
+    const out = extractFileLinks(`Primeiro [a](${download}) depois [b](${preview}) por fim ${download}`);
+    expect(out.files).toHaveLength(1);
+    expect(out.text).toBe("Primeiro depois por fim");
+  });
+  it("reads the file name from the link text and falls back to Arquivo", () => {
+    expect(extractFileLinks(`[📎 Baixar]( ${download} )`).files[0]).toMatchObject({ name: "Arquivo", downloadUrl: download });
+    expect(extractFileLinks(`![prévia](${preview})`).files[0]).toMatchObject({ name: "Arquivo", previewUrl: preview });
+  });
+  it("leaves other links and images untouched", () => {
+    const out = extractFileLinks("[Guia](https://example.com/guia.pdf) ![foto](https://example.com/foto.png) texto");
+    expect(out.files).toEqual([]);
+    expect(out.text).toBe("[Guia](https://example.com/guia.pdf) ![foto](https://example.com/foto.png) texto");
+  });
+  it("ignores look-alike file hosts and file links without an id", () => {
+    const out = extractFileLinks("[x](https://evil.example/webhook/vigyon-arquivo?id=file_1) [y](https://n8n.srv2083175.hstgr.cloud/webhook/vigyon-arquivo)");
+    expect(out.files).toEqual([]);
+    expect(out.text).toContain("https://evil.example/webhook/vigyon-arquivo?id=file_1");
+  });
+});
