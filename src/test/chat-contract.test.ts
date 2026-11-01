@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { CHAT_MAX_CHARACTERS, CHAT_SESSION_KEY, CHAT_TIMEOUT_MS, CHAT_URL, CHAT_WAIT_NOTICE_MS, DOWNLOAD_URL, getChatSession, isDownloadLink, readChatOutput, validateChatInput } from "@/lib/chat-config";
+import { CHAT_MAX_CHARACTERS, CHAT_SESSION_KEY, CHAT_TIMEOUT_MS, CHAT_URL, CHAT_WAIT_NOTICE_MS, DOWNLOAD_URL, extractFileLinks, getChatSession, isDownloadLink, readChatOutput, validateChatInput } from "@/lib/chat-config";
 import { requestChat } from "@/lib/chat-request.server";
 
 const sessionId = "12345678-1234-4234-8234-123456789abc";

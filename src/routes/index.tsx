@@ -8,7 +8,7 @@ import { chunkText } from "@/lib/chunk-text";
 import { askVigyon } from "@/lib/chat.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { ChatMarkdown } from "@/components/chat-markdown";
-import { CHAT_ERROR, CHAT_LONG_WAIT, CHAT_MAX_CHARACTERS, CHAT_TIMEOUT_MS, CHAT_WAIT_NOTICE_MS, getChatSession } from "@/lib/chat-config";
+import { CHAT_ERROR, CHAT_LONG_WAIT, CHAT_MAX_CHARACTERS, CHAT_TIMEOUT_MS, CHAT_WAIT_NOTICE_MS, extractFileLinks, getChatSession } from "@/lib/chat-config";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -103,8 +103,10 @@ function Index() {
     audioController.current = controller;
     setSpeaking(true);
     try {
-      const cleaned = text.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/https?:\/\/\S+/g, "").replace(/^[-*•#]\s+/gm, "").replace(/\*\*/g, "");
-      for (const chunk of chunkText(cleaned)) {
+      const { text: body, files } = extractFileLinks(text);
+      const cleaned = body.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/https?:\/\/\S+/g, "").replace(/^[-*•#]\s+/gm, "").replace(/\*\*/g, "").trim();
+      const spoken = files.length ? `${cleaned} Arquivo${files.length > 1 ? "s" : ""} pronto${files.length > 1 ? "s" : ""}: ${files.map((f) => f.name).join(", ")}. Toque em Prévia para conferir ou em Baixar para salvar.` : cleaned;
+      for (const chunk of chunkText(spoken)) {
         controller.signal.throwIfAborted();
         await streamSpeech('/api/speech', chunk, controller.signal, opts.current.rate);
       }
