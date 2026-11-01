@@ -71,7 +71,10 @@ export function extractFileLinks(text: string): { text: string; files: ChatFile[
   let body = text
     .replace(/!\[([^\]]*)\]\(\s*(https?:\/\/[^\s)]+)[^)]*\)/g, (all, label: string, href: string) => (collect(href, label) ? "" : all))
     .replace(/\[([^\]]*)\]\(\s*(https?:\/\/[^\s)]+)[^)]*\)/g, (all, label: string, href: string) => (collect(href, label) ? "" : all))
-    .replace(/https?:\/\/[^\s<>"'`]+/g, (all) => (collect(all) ? "" : all));
+    .replace(/https?:\/\/[^\s<>"'`)\]]+/g, (all) => {
+      const trail = all.match(/[.,;:!?]+$/)?.[0] ?? "";
+      return collect(trail ? all.slice(0, -trail.length) : all) ? trail : all;
+    });
 
   body = body
     .replace(/<\s*>/g, "")
