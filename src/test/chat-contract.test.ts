@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { CHAT_MAX_CHARACTERS, CHAT_SESSION_KEY, CHAT_TIMEOUT_MS, CHAT_URL, CHAT_WAIT_NOTICE_MS, DOWNLOAD_URL, getChatSession, isDownloadLink, readChatOutput, validateChatInput } from "@/lib/chat-config";
+import { CHAT_MAX_CHARACTERS, CHAT_SESSION_KEY, CHAT_TIMEOUT_MS, CHAT_URL, CHAT_WAIT_NOTICE_MS, DOWNLOAD_URL, extractFileLinks, getChatSession, isDownloadLink, readChatOutput, validateChatInput } from "@/lib/chat-config";
 import { requestChat } from "@/lib/chat-request.server";
 
 const sessionId = "12345678-1234-4234-8234-123456789abc";
@@ -56,5 +56,36 @@ describe("Persistent chat session", () => {
     expect(getChatSession(localStorage, true)).toBe(next);
     expect(localStorage.getItem(CHAT_SESSION_KEY)).toBe(next);
     expect(next).not.toBe(sessionId);
+  });
+});
+
+describe("Generated file links", () => {
+  const id = "file_01BnwPRWqjXZCaG4xc3CanNn";
+  const download = `${DOWNLOAD_URL}?id=${id}&download=1`;
+  const preview = `${DOWNLOAD_URL}?id=${id}`;
+
+  it("keeps only preview and direct download and removes the link from the text", () => {
+    const out = extractFileLinks(`Criei a planilha.\n\n[📎 Baixar controle_epi.xlsx](${download})`);
+    expect(out.files).toEqual([{ id, name: "controle_epi.xlsx", previewUrl: preview, downloadUrl: download }]);
+    expect(out.text).toBe("Criei a planilha.");
+  });
+  it("lists one file once even when the answer repeats its link", () => {
+    const out = extractFileLinks(`Primeiro [a](${download}) depois [b](${preview}) por fim ${download}`);
+    expect(out.files).toHaveLength(1);
+    expect(out.text).toBe("Primeiro depois por fim");
+  });
+  it("reads the file name from the link text and falls back to Arquivo", () => {
+    expect(extractFileLinks(`[📎 Baixar]( ${download} )`).files[0]).toMatchObject({ name: "Arquivo", downloadUrl: download });
+    expect(extractFileLinks(`![prévia](${preview})`).files[0]).toMatchObject({ name: "Arquivo", previewUrl: preview });
+  });
+  it("leaves other links and images untouched", () => {
+    const out = extractFileLinks("[Guia](https://example.com/guia.pdf) ![foto](https://example.com/foto.png) texto");
+    expect(out.files).toEqual([]);
+    expect(out.text).toBe("[Guia](https://example.com/guia.pdf) ![foto](https://example.com/foto.png) texto");
+  });
+  it("ignores look-alike file hosts and file links without an id", () => {
+    const out = extractFileLinks("[x](https://evil.example/webhook/vigyon-arquivo?id=file_1) [y](https://n8n.srv2083175.hstgr.cloud/webhook/vigyon-arquivo)");
+    expect(out.files).toEqual([]);
+    expect(out.text).toContain("https://evil.example/webhook/vigyon-arquivo?id=file_1");
   });
 });
