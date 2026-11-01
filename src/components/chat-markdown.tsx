@@ -8,7 +8,7 @@ function isForcedDownload(href: string) {
   try { return new URL(href).searchParams.get("download") === "1"; } catch { return false; }
 }
 
-function ChatImage({ src, alt }: { src?: string; alt?: string }) {
+function ChatImage({ src, alt }: { src?: string | undefined; alt?: string | undefined }) {
   const [failed, setFailed] = useState(false);
   if (!src) return null;
   if (failed) return <Button asChild className="vg-btn vg-btn-outline vg-download"><a href={src} target="_blank" rel="noopener noreferrer">🖼️ Abrir imagem</a></Button>;
