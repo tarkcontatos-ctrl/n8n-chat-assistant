@@ -38,3 +38,48 @@ export function isDownloadLink(href: string): boolean {
     return url.protocol === allowed.protocol && url.origin === allowed.origin && url.pathname === allowed.pathname && !url.username && !url.password;
   } catch { return false; }
 }
+
+export type ChatFile = { id: string; name: string; previewUrl: string; downloadUrl: string };
+
+const FILE_NAME = /[^\s/\\"'`]+\.[A-Za-z0-9]{1,5}/;
+
+function fileUrls(id: string) {
+  const base = new URL(DOWNLOAD_URL);
+  base.searchParams.set("id", id);
+  const previewUrl = base.toString();
+  base.searchParams.set("download", "1");
+  return { previewUrl, downloadUrl: base.toString() };
+}
+
+// Keeps only the two valid actions for a generated file: preview and direct download.
+// Every reference to the file service (markdown link, image or bare URL) is taken out
+// of the message body and returned as a single entry per file id.
+export function extractFileLinks(text: string): { text: string; files: ChatFile[] } {
+  const files: ChatFile[] = [];
+  const seen = new Set<string>();
+  const collect = (href: string, label = ""): boolean => {
+    if (!isDownloadLink(href)) return false;
+    const id = new URL(href).searchParams.get("id")?.trim();
+    if (!id) return false;
+    if (!seen.has(id)) {
+      seen.add(id);
+      files.push({ id, name: label.match(FILE_NAME)?.[0] ?? "Arquivo", ...fileUrls(id) });
+    }
+    return true;
+  };
+
+  let body = text
+    .replace(/!\[([^\]]*)\]\(\s*(https?:\/\/[^\s)]+)[^)]*\)/g, (all, label: string, href: string) => (collect(href, label) ? "" : all))
+    .replace(/\[([^\]]*)\]\(\s*(https?:\/\/[^\s)]+)[^)]*\)/g, (all, label: string, href: string) => (collect(href, label) ? "" : all))
+    .replace(/https?:\/\/[^\s<>"'`]+/g, (all) => (collect(all) ? "" : all));
+
+  body = body
+    .replace(/<\s*>/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  return { text: body, files };
+}

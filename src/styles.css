@@ -95,6 +95,10 @@
 .vg-msg a.vg-img-link { text-decoration: none; }
 .vg-img-link { display: inline-block; max-width: 100%; margin: 8px 0; cursor: zoom-in; }
 .vg-chat-img { display: block; max-width: 100%; height: auto; border-radius: 10px; }
+.vg-file { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bot); }
+.vg-file-name { font-weight: 600; margin-right: auto; overflow-wrap: anywhere; }
+.vg-file-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.vg-file .vg-download { margin: 0; }
 .vg-msg table { border-collapse: collapse; font-size: 13px; }
 .vg-msg th, .vg-msg td { border: 1px solid var(--line); padding: 8px 10px; min-width: 100px; text-align: left; }
 .vg-msg th { background: var(--surface); }
